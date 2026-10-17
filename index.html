@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElevenLabs Voice Studio — AI Narration & Speech Synthesizer</title>
+  <meta name="description" content="Generate lifelike voice narrations using ElevenLabs API with customizable models, voices, and real-time audio visualization.">
+  <meta name="theme-color" content="#0d0f17">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+  <div class="ambient-glow glow-3"></div>
+  <div class="grid-overlay"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5v14M7 8v8M22 10v4M2 10v4"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>ElevenLabs <span class="gradient-text">Studio</span></h1>
+          <p class="tagline">Next-Gen AI Text-to-Speech & Narration Engine</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="toggleApiKeyModalBtn" class="pill-btn" title="Configure ElevenLabs API Key">
+          <span class="key-status-dot" id="headerKeyDot"></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+          <span id="headerKeyLabel">API Key</span>
+        </button>
+        <button id="historyToggleBtn" class="pill-btn" title="View narration history">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>History</span>
+          <span class="badge" id="historyCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="main-layout">
+      <!-- Left Column: Controls & Text Input -->
+      <section class="left-panel">
+        
+        <!-- API Notice / Quick Setup Banner -->
+        <div id="apiKeyBanner" class="api-notice-banner">
+          <div class="banner-icon" id="bannerIcon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div class="banner-content">
+            <div class="banner-title-row">
+              <strong id="bannerTitle">ElevenLabs API Key Configuration</strong>
+              <span id="bannerKeyStatusBadge" class="status-badge-inline">Not Configured</span>
+            </div>
+            <p id="bannerDesc">Paste your ElevenLabs API key below to unlock lifelike narration. Stored safely in your browser.</p>
+            <div class="banner-input-row" id="bannerInputRow">
+              <input type="password" id="bannerApiKeyInput" placeholder="Paste your ElevenLabs API Key here (e.g. sk_... or xi-api-key)" autocomplete="off" spellcheck="false">
+              <button type="button" id="bannerSaveBtn" class="btn btn-primary btn-sm">Save Key</button>
+              <button type="button" id="bannerSetupBtn" class="btn btn-secondary btn-sm">Advanced / Modal</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Text Input Card -->
+        <div class="card glass-card input-card">
+          <div class="card-header">
+            <div class="header-left">
+              <label for="textInput" class="section-label">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                Script & Narration Text
+              </label>
+            </div>
+            
+            <div class="header-actions-inline">
+              <button id="pasteBtn" class="action-link" title="Paste text from clipboard">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                </svg>
+                Paste
+              </button>
+              <button id="clearBtn" class="action-link text-danger" title="Clear text">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="textarea-wrapper">
+            <textarea 
+              id="textInput" 
+              placeholder="Paste or write your text here for narration... e.g. An epic movie prologue, documentary voiceover, or bedtime story."
+              rows="6"
+              spellcheck="true"
+            ></textarea>
+          </div>
+
+          <!-- Quick Samples & Character Counter -->
+          <div class="input-card-footer">
+            <div class="sample-pills">
+              <span class="sample-title">Presets:</span>
+              <button class="sample-pill" data-type="story">Story</button>
+              <button class="sample-pill" data-type="tech">Tech Demo</button>
+              <button class="sample-pill" data-type="nature">Documentary</button>
+              <button class="sample-pill" data-type="quotes">Inspirational</button>
+              <button class="sample-pill" data-type="motion">First Move</button>
+            </div>
+            <div class="stats-counter">
+              <span id="charCount">0</span> chars &bull; <span id="wordCount">0</span> words
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuration Bar: Model & Voice Selection -->
+        <div class="card glass-card config-card">
+          <div class="config-grid">
+            
+            <!-- Model Selection Dropdown -->
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="modelSelect">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                    <line x1="8" y1="21" x2="16" y2="21"/>
+                    <line x1="12" y1="17" x2="12" y2="21"/>
+                  </svg>
+                  ElevenLabs Model
+                </label>
+                <span class="info-pill" id="modelInfoTag">Multilingual</span>
+              </div>
+              <div class="select-wrapper">
+                <select id="modelSelect">
+                  <option value="eleven_multilingual_v2" selected>Eleven Multilingual v2 (State of the Art & Rich Emotion)</option>
+                  <option value="eleven_flash_v2_5">Eleven Flash v2.5 (⚡ Ultra-low 75ms Latency, 32 Languages)</option>
+                  <option value="eleven_turbo_v2_5">Eleven Turbo v2.5 (🚀 High Quality & Speed, 32 Languages)</option>
+                  <option value="eleven_flash_v2">Eleven Flash v2 (⚡ Fast, English)</option>
+                  <option value="eleven_turbo_v2">Eleven Turbo v2 (English Only)</option>
+                  <option value="eleven_multilingual_v1">Eleven Multilingual v1 (Original)</option>
+                  <option value="eleven_monolingual_v1">Eleven Monolingual v1 (Standard English)</option>
+                </select>
+                <div class="select-chevron">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+              <p class="field-hint" id="modelDescription">Cutting-edge model with 29 languages and highest emotional range.</p>
+            </div>
+
+            <!-- Voice Selection Dropdown -->
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="voiceSelect">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                  </svg>
+                  Voice Actor
+                </label>
+                <button id="refreshVoicesBtn" class="refresh-icon-btn" title="Refresh voices from ElevenLabs account">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                  Sync
+                </button>
+              </div>
+              <div class="select-wrapper">
+                <select id="voiceSelect">
+                  <!-- Default popular voices fallback / pre-loaded -->
+                  <option value="JBFqnCBsd6RMkjVDRZzb" selected>George (Warm British, Storyteller)</option>
+                  <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Calm, Professional & Conversational)</option>
+                  <option value="pNInz6obpgDQGcFmaJgB">Adam (Deep, Warm, American Narration)</option>
+                  <option value="ErXwobaYiN019PkySvjV">Antoni (Expressive, Animated & Storyteller)</option>
+                  <option value="EXAVITQu4vr4xnSDxMaL">Bella (Sweet, Soft & Engaging)</option>
+                  <option value="yoZ06aMxZJJ28mfd3POQ">Sam (Dynamic, Raspy, Narration)</option>
+                  <option value="VR6AewLTigWG4xSOukaG">Arnold (Crisp, Confident, Voiceover)</option>
+                  <option value="TxGEqnHWrfWFTfGW9XjX">Josh (Deep, Authoritative, Documentary)</option>
+                  <option value="AZnzlk1XvdvUeBnXmlld">Domi (Energetic, Clear & Modern)</option>
+                  <option value="MF3mGyEYCl7XYWbV9V6O">Elli (Gentle, Emotional & Clear)</option>
+                  <option value="onwK4e9ZLuTAKqWW03F9">Daniel (Deep, British News Anchor)</option>
+                  <option value="ThT5KcBeYPX3keUQqHPh">Dorothy (Pleasant, British Storyteller)</option>
+                </select>
+                <div class="select-chevron">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+              <p class="field-hint" id="voiceDescription">George: Warm British storyteller voice, ideal for deep narrations.</p>
+            </div>
+
+            <!-- Output Format Dropdown -->
+            <div class="control-group">
+              <div class="control-label-row">
+                <label for="outputFormatSelect">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                  </svg>
+                  Output Quality (SDK)
+                </label>
+                <span class="info-pill" id="formatInfoTag">mp3_44100_128</span>
+              </div>
+              <div class="select-wrapper">
+                <select id="outputFormatSelect">
+                  <option value="mp3_44100_128" selected>mp3_44100_128 (Default 128 kbps)</option>
+                  <option value="mp3_44100_192">mp3_44100_192 (High Fidelity 192 kbps)</option>
+                  <option value="mp3_44100_64">mp3_44100_64 (Balanced Stream 64 kbps)</option>
+                  <option value="mp3_22050_32">mp3_22050_32 (Low Bandwidth 32 kbps)</option>
+                </select>
+                <div class="select-chevron">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                </div>
+              </div>
+              <p class="field-hint">Specified via <code>outputFormat: 'mp3_44100_128'</code> in ElevenLabs SDK.</p>
+            </div>
+
+          </div>
+
+          <!-- Expandable Fine-Tuning Voice Settings -->
+          <div class="advanced-settings-toggle">
+            <button id="toggleSettingsBtn" class="accordion-btn" type="button">
+              <span class="accordion-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+                Voice Fine-Tuning & Dynamics
+              </span>
+              <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            
+            <div id="settingsPanel" class="settings-panel collapsed">
+              <div class="settings-grid">
+                <!-- Stability -->
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <label for="stabilitySlider">Stability</label>
+                    <span id="stabilityVal" class="slider-val">50%</span>
+                  </div>
+                  <input type="range" id="stabilitySlider" min="0" max="1" step="0.05" value="0.5">
+                  <div class="slider-labels">
+                    <span>Expressive / Variable</span>
+                    <span>Consistent / Stable</span>
+                  </div>
+                </div>
+
+                <!-- Similarity Boost -->
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <label for="similaritySlider">Clarity + Similarity</label>
+                    <span id="similarityVal" class="slider-val">75%</span>
+                  </div>
+                  <input type="range" id="similaritySlider" min="0" max="1" step="0.05" value="0.75">
+                  <div class="slider-labels">
+                    <span>Low</span>
+                    <span>High Fidelity</span>
+                  </div>
+                </div>
+
+                <!-- Style Exaggeration -->
+                <div class="slider-group">
+                  <div class="slider-header">
+                    <label for="styleSlider">Style Exaggeration</label>
+                    <span id="styleVal" class="slider-val">0%</span>
+                  </div>
+                  <input type="range" id="styleSlider" min="0" max="1" step="0.05" value="0">
+                  <div class="slider-labels">
+                    <span>Natural</span>
+                    <span>Dramatic</span>
+                  </div>
+                </div>
+
+                <!-- Speaker Boost -->
+                <div class="toggle-group">
+                  <label class="switch-container" for="speakerBoostToggle">
+                    <span class="switch-label">Speaker Boost</span>
+                    <input type="checkbox" id="speakerBoostToggle" checked>
+                    <span class="switch-slider"></span>
+                  </label>
+                  <p class="field-hint">Boosts audio clarity and amplifies characteristic voice qualities.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button: Start Narration -->
+          <div class="action-footer">
+            <button id="narrateBtn" class="btn btn-narrate">
+              <span class="btn-glow"></span>
+              <span class="btn-content">
+                <svg class="play-icon" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span class="spinner" id="btnSpinner"></span>
+                <span class="btn-text" id="narrateBtnText">Start Narration</span>
+              </span>
+              <span class="hotkey-badge">Ctrl + Enter</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right Column: Player & Visualizer & History -->
+      <section class="right-panel">
+
+        <!-- Active Narration Player Card -->
+        <div class="card glass-card player-card">
+          <div class="player-header">
+            <div class="player-title-row">
+              <div class="now-playing-dot" id="playbackDot"></div>
+              <h3>Audio Studio Player</h3>
+            </div>
+            <div class="player-status-badge" id="playerStatusBadge">Ready</div>
+          </div>
+
+          <!-- Audio Waveform Visualizer Canvas -->
+          <div class="visualizer-wrapper">
+            <canvas id="visualizerCanvas" width="500" height="150"></canvas>
+            <div class="visualizer-placeholder" id="visualizerPlaceholder">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M2 10v4M6 7v10M10 4v16M14 8v8M18 5v14M22 10v4"/>
+              </svg>
+              <span>Click "Start Narration" to synthesize speech</span>
+            </div>
+          </div>
+
+          <!-- Narration Metadata summary -->
+          <div class="narration-meta" id="narrationMeta">
+            <div class="meta-item">
+              <span class="meta-label">Voice:</span>
+              <span class="meta-val" id="metaVoice">Rachel</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Model:</span>
+              <span class="meta-val" id="metaModel">Multilingual v2</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Duration:</span>
+              <span class="meta-val" id="metaDuration">0:00</span>
+            </div>
+          </div>
+
+          <!-- Timeline scrubber -->
+          <div class="timeline-row">
+            <span id="currentTime" class="time-label">0:00</span>
+            <div class="scrubber-bar" id="scrubberBar">
+              <div class="scrubber-progress" id="scrubberProgress"></div>
+              <div class="scrubber-handle" id="scrubberHandle"></div>
+            </div>
+            <span id="totalDuration" class="time-label">0:00</span>
+          </div>
+
+          <!-- Playback Controls -->
+          <div class="player-controls">
+            <div class="controls-left">
+              <!-- Replay 5s -->
+              <button class="ctrl-btn" id="rewindBtn" title="Rewind 5s">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5"/>
+                </svg>
+              </button>
+
+              <!-- Main Play/Pause Button -->
+              <button class="play-pause-btn" id="playPauseBtn" title="Play / Pause Audio" disabled>
+                <svg id="playIconSvg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <svg id="pauseIconSvg" class="hidden" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16"></rect>
+                  <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+              </button>
+
+              <!-- Forward 5s -->
+              <button class="ctrl-btn" id="forwardBtn" title="Forward 5s">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 17l5-5-5-5M6 17l5-5-5-5"/>
+                </svg>
+              </button>
+
+              <!-- Speed Selector -->
+              <div class="speed-control">
+                <select id="playbackSpeedSelect">
+                  <option value="0.75">0.75x</option>
+                  <option value="1" selected>1.0x</option>
+                  <option value="1.25">1.25x</option>
+                  <option value="1.5">1.5x</option>
+                  <option value="2">2.0x</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="controls-right">
+              <!-- Volume slider -->
+              <div class="volume-container">
+                <button id="muteBtn" class="ctrl-btn" title="Toggle Mute">
+                  <svg id="volIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                  </svg>
+                </button>
+                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1" title="Volume">
+              </div>
+
+              <!-- Download Button -->
+              <button id="downloadBtn" class="download-action-btn" title="Download Audio File" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Download MP3</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Session History Drawer / Card -->
+        <div class="card glass-card history-card" id="historySection">
+          <div class="card-header">
+            <h4 class="section-label">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+              Recent Narrations
+            </h4>
+            <button id="clearHistoryBtn" class="action-link text-danger" title="Clear all history">Clear All</button>
+          </div>
+
+          <div class="history-list" id="historyList">
+            <div class="history-empty" id="historyEmpty">
+              <p>No narrations generated yet in this session.</p>
+              <span class="subtext">Your generated audio clips will appear here for instant replay and comparison.</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- Hidden Native Audio Element -->
+    <audio id="audioElement" preload="metadata"></audio>
+
+    <!-- API Key Configuration Modal -->
+    <div id="apiKeyModal" class="modal-backdrop hidden">
+      <div class="modal-card glass-card">
+        <div class="modal-header">
+          <div class="modal-title-row">
+            <div class="modal-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h3>ElevenLabs API Setup</h3>
+          </div>
+          <button id="closeApiKeyModalBtn" class="close-modal-btn" aria-label="Close modal">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <p class="modal-desc">
+            Your API key connects directly from your browser to the official ElevenLabs servers. It is securely stored in your browser's <code>localStorage</code> and never sent to any third party.
+          </p>
+
+          <div class="form-group">
+            <label for="apiKeyInput">ElevenLabs API Key</label>
+            <div class="input-password-wrapper">
+              <input type="password" id="apiKeyInput" placeholder="sk_... or xi-api-key" autocomplete="off" spellcheck="false">
+              <button type="button" id="toggleApiKeyVisibility" class="eye-btn" title="Toggle visibility">
+                <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <div class="key-help-row">
+              <a href="https://elevenlabs.io/app/speech-synthesis" target="_blank" rel="noopener noreferrer" class="link-external">
+                Get an API Key from ElevenLabs &rarr;
+              </a>
+              <span id="keyValidationStatus" class="status-indicator">Not configured</span>
+            </div>
+          </div>
+
+          <!-- Subscription info if key is connected -->
+          <div id="accountInfoBox" class="account-info-box hidden">
+            <div class="info-row">
+              <span>Account Tier:</span>
+              <strong id="userTier">Free / Starter</strong>
+            </div>
+            <div class="info-row">
+              <span>Characters Remaining:</span>
+              <strong id="userCharRemaining">10,000 / 10,000</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="testApiKeyBtn" class="btn btn-secondary">
+            <span class="spinner-sm" id="testSpinner"></span>
+            <span>Test Connection</span>
+          </button>
+          <button id="saveApiKeyBtn" class="btn btn-primary">Save & Apply</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Powered by <strong>ElevenLabs API</strong> &bull; Crafted with HTML, CSS, JavaScript</p>
+    </footer>
+  </div>
+
+  <script src="elevenlabs-client.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
